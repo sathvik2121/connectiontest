@@ -56,9 +56,9 @@ import java.util.Date;
 public class PdfGeneration {
 
 	public static void main(String[] args) throws InvalidKeyException, DocumentException, URISyntaxException, StorageException, UnsupportedEncodingException, MalformedURLException  {
-		PdfGeneration ob= new PdfGeneration();
-		List<String> s=ob.run ("data2.xml");
-		System.out.println(s);
+//		PdfGeneration ob= new PdfGeneration();
+//		List<String> s=ob.run ("data2.xml");
+//		System.out.println(s);
 		SpringApplication.run(PdfGeneration.class, args);
 	}
 @GetMapping("/")
