@@ -91,13 +91,13 @@ public class PdfGeneration {
 	
 	@GetMapping("/testing")
 	
-	public List<String> run(@RequestParam( name="fileName") String name) throws DocumentException, URISyntaxException, StorageException, InvalidKeyException
+	public String run(@RequestParam( name="fileName") String name) throws DocumentException, URISyntaxException, StorageException, InvalidKeyException
 	{
 			final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=mqbawblobstorage01;AccountKey=4eEEA1jiy/kEpf9PvN8ikjQeXGFODXXH33G+VPhUiyhqzF7K7RrwFg/0CDEBJpkaYzWArR1bW2XD+AStaWP6zg==;EndpointSuffix=core.windows.net";
 		    File xsltFile = null;
 			CloudStorageAccount storageAccount;
 			CloudBlobClient blobClient = null;
-			List<String> blobFileName=new ArrayList<String>();
+			String blobFileName=null;
 			try {    
 			
 				storageAccount = CloudStorageAccount.parse(storageConnectionString);
@@ -149,7 +149,7 @@ public class PdfGeneration {
 		    	    String fileName=fileNameWithOutExt+"_"+formatter.format(date);
 		    	    doc.close();
 		    	    CloudBlockBlob blob = buffercontainer.getBlockBlobReference(fileName+".pdf");
-		    	    blobFileName.add(fileName+".pdf");
+		    	    blobFileName=fileName+".pdf";
 		    	    blob.uploadFromFile(outputFile.getAbsolutePath());
 		    	    xmloutput.close();
 		    	    xsloutput.close();
