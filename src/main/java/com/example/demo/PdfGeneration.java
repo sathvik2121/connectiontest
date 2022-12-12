@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
-
+import java.io.FileInputStream;
 import java.io.IOException;
 
 import java.io.OutputStream;
@@ -51,13 +51,18 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import java.text.SimpleDateFormat;  
 import java.util.Date;  
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+
 @RestController
 @SpringBootApplication
 public class PdfGeneration {
 
-	public static void main(String[] args) throws InvalidKeyException, DocumentException, URISyntaxException, StorageException, UnsupportedEncodingException, MalformedURLException  {
+	public static void main(String[] args) throws InvalidKeyException, DocumentException, URISyntaxException, StorageException, IOException  {
 		PdfGeneration ob= new PdfGeneration();
-		String s=ob.run ("data1.xml");
+		String s=ob.update("filename","reviewername","revieweraction","reviwerreason",new Date(),"approvername","approveraction","approverreason",new Date());
 		System.out.println(s);
 		SpringApplication.run(PdfGeneration.class, args);
 	}
@@ -171,4 +176,53 @@ public class PdfGeneration {
 		} 
 				return blobFileName;
 		   }
+@GetMapping("/AuditTrail")
+	
+	public String update(@RequestParam( name="fileName") String fn,@RequestParam( name="reviewerName") String rn,@RequestParam( name="reviewerAction") String ra,@RequestParam( name="reviewerReason") String rr,@RequestParam( name="reviewDateTime") Date rd,@RequestParam( name="approverName") String an,@RequestParam( name="approverAction") String aa,@RequestParam( name="approverReason") String ar,@RequestParam( name="approverDateTime") Date ad) throws InvalidKeyException, URISyntaxException, StorageException, IOException
+	{
+		
+		 final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=mqbawblobstorage01;AccountKey=4eEEA1jiy/kEpf9PvN8ikjQeXGFODXXH33G+VPhUiyhqzF7K7RrwFg/0CDEBJpkaYzWArR1bW2XD+AStaWP6zg==;EndpointSuffix=core.windows.net";
+		 CloudStorageAccount storageAccount;
+		 CloudBlobClient blobClient = null;
+		 File auditFile;
+		 storageAccount = CloudStorageAccount.parse(storageConnectionString);
+		 blobClient = storageAccount.createCloudBlobClient();
+		 CloudBlobContainer container=blobClient.getContainerReference("fileaccess");
+		 CloudBlockBlob blob = container.getBlockBlobReference("AuditTrails.xlsx");
+		 auditFile = File.createTempFile("auditTrail", ".xlsx");
+		 FileOutputStream audit= new FileOutputStream(auditFile);
+    	 blob.download(audit);
+
+		try {
+			
+			FileInputStream fileInputStream = new FileInputStream(auditFile.getAbsolutePath());
+			Workbook workbook = WorkbookFactory.create(fileInputStream);		
+			Sheet sheet = workbook.getSheetAt(0);
+			int lastRowCount = sheet.getLastRowNum();
+			Row dataRow = sheet.createRow(++lastRowCount);
+	        	dataRow.createCell(0).setCellValue(fn);
+	        	dataRow.createCell(1).setCellValue(rn);
+	        	dataRow.createCell(2).setCellValue(ra);       	        
+	        	dataRow.createCell(3).setCellValue(rr);
+	        	dataRow.createCell(4).setCellValue(rd);
+	        	dataRow.createCell(5).setCellValue(an);
+	        	dataRow.createCell(6).setCellValue(aa);
+	        	dataRow.createCell(7).setCellValue(ar);
+	        	dataRow.createCell(8).setCellValue(ad);
+	        fileInputStream.close();
+			workbook.write(audit);
+			audit.close();
+			FileOutputStream fileOutputStream = new FileOutputStream(auditFile);
+			workbook.write(fileOutputStream);
+			fileOutputStream.close();
+			blob.uploadFromFile(auditFile.getAbsolutePath());
+			auditFile.deleteOnExit();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return "successfull";
+	}
+	
+	
 }
