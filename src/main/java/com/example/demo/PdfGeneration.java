@@ -178,7 +178,7 @@ public class PdfGeneration {
 		   }
 @GetMapping("/AuditTrail")
 	
-	public String update(@RequestParam( name="fileName") String fn,@RequestParam( name="reviewerName") String rn,@RequestParam( name="reviewerAction") String ra,@RequestParam( name="reviewerReason") String rr,@RequestParam( name="reviewDateTime") Date rd,@RequestParam( name="approverName") String an,@RequestParam( name="approverAction") String aa,@RequestParam( name="approverReason") String ar,@RequestParam( name="approverDateTime") Date ad) throws InvalidKeyException, URISyntaxException, StorageException, IOException
+	public String update(@RequestParam( name="fileName") String fn,@RequestParam( name="reviewerName") String rn,@RequestParam( name="reviewerAction") String ra,@RequestParam( name="reviewerReason") String rr,@RequestParam( name="reviewDateTime") String rd,@RequestParam( name="approverName") String an,@RequestParam( name="approverAction") String aa,@RequestParam( name="approverReason") String ar,@RequestParam( name="approverDateTime") String ad) throws InvalidKeyException, URISyntaxException, StorageException, IOException
 	{
 		
 		 final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=mqbawblobstorage01;AccountKey=4eEEA1jiy/kEpf9PvN8ikjQeXGFODXXH33G+VPhUiyhqzF7K7RrwFg/0CDEBJpkaYzWArR1bW2XD+AStaWP6zg==;EndpointSuffix=core.windows.net";
