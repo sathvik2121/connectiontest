@@ -49,12 +49,17 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 
 import java.text.SimpleDateFormat;  
-import java.util.Date;  
+import java.util.Date;
 
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 @RestController
 @SpringBootApplication
@@ -62,7 +67,7 @@ public class PdfGeneration {
 
 	public static void main(String[] args) throws InvalidKeyException, DocumentException, URISyntaxException, StorageException, IOException  {
 //		PdfGeneration ob= new PdfGeneration();
-//		String s=ob.update("filename","reviewername","revieweraction","reviwerreason",new Date(),"approvername","approveraction","approverreason",new Date());
+//		String s=ob.update("filename","reviewername","revieweraction","reviwerreason","hi","approvername","approveraction","approverreason","hello");
 //		System.out.println(s);
 		SpringApplication.run(PdfGeneration.class, args);
 	}
@@ -184,21 +189,28 @@ public class PdfGeneration {
 		 final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=mqbawblobstorage01;AccountKey=4eEEA1jiy/kEpf9PvN8ikjQeXGFODXXH33G+VPhUiyhqzF7K7RrwFg/0CDEBJpkaYzWArR1bW2XD+AStaWP6zg==;EndpointSuffix=core.windows.net";
 		 CloudStorageAccount storageAccount;
 		 CloudBlobClient blobClient = null;
-		 File auditFile;
+		 File auditFile ;
 		 storageAccount = CloudStorageAccount.parse(storageConnectionString);
 		 blobClient = storageAccount.createCloudBlobClient();
-		 CloudBlobContainer container=blobClient.getContainerReference("fileaccess");
-		 CloudBlockBlob blob = container.getBlockBlobReference("AuditTrails.xlsx");
+		 CloudBlobContainer container=blobClient.getContainerReference("logs");
+		 SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd");  
+ 	     Date date = new Date();
+		 CloudBlockBlob blob = container.getBlockBlobReference("AuditTrails"+"_"+formatter.format(date)+".xlsx");
 		 auditFile = File.createTempFile("auditTrail", ".xlsx");
-		 FileOutputStream audit= new FileOutputStream(auditFile);
-    	 blob.download(audit);
-
+	
+		
+		 
+if(blob.exists())
+{
+	FileOutputStream audit= new FileOutputStream(auditFile);
+    blob.download(audit);
 		try {
 			
 			FileInputStream fileInputStream = new FileInputStream(auditFile.getAbsolutePath());
 			Workbook workbook = WorkbookFactory.create(fileInputStream);		
 			Sheet sheet = workbook.getSheetAt(0);
 			int lastRowCount = sheet.getLastRowNum();
+			System.out.println(lastRowCount);
 			Row dataRow = sheet.createRow(++lastRowCount);
 	        	dataRow.createCell(0).setCellValue(fn);
 	        	dataRow.createCell(1).setCellValue(rn);
@@ -209,18 +221,78 @@ public class PdfGeneration {
 	        	dataRow.createCell(6).setCellValue(aa);
 	        	dataRow.createCell(7).setCellValue(ar);
 	        	dataRow.createCell(8).setCellValue(ad);
-	        fileInputStream.close();
-			workbook.write(audit);
-			audit.close();
 			FileOutputStream fileOutputStream = new FileOutputStream(auditFile);
 			workbook.write(fileOutputStream);
 			fileOutputStream.close();
-			blob.uploadFromFile(auditFile.getAbsolutePath());
-			auditFile.deleteOnExit();
+			
+			
+		 fileInputStream.close();
+			
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+}
+		 
+		 
+		 else {
+			 Workbook workbook1 = new XSSFWorkbook();	
+				Sheet sheet = workbook1.createSheet();
+				int lastRowCount = sheet.getLastRowNum();
+				Row dataRow = sheet.createRow(lastRowCount);
+				CellStyle style = workbook1.createCellStyle();  
+				 style = workbook1.createCellStyle();  
+		            style.setFillForegroundColor(IndexedColors.BLUE.getIndex());  
+		            style.setFillPattern(FillPatternType.SOLID_FOREGROUND); 
+		            Font font = workbook1.createFont();
+		          
+		            font.setBold(true);
+		            font.setColor(IndexedColors.WHITE.getIndex());
+		            style.setFont(font);
+				System.out.println("lastRowCount.. "  +  lastRowCount);
+				dataRow.createCell(0).setCellValue("filename");
+		        	dataRow.createCell(1).setCellValue("reviewername");
+		        	dataRow.createCell(2).setCellValue("revieweraction");       	        
+		        	dataRow.createCell(3).setCellValue("reviewerreason");
+		        	dataRow.createCell(4).setCellValue("reviewdate");
+		        	dataRow.createCell(5).setCellValue("Approverrname");
+		        	dataRow.createCell(6).setCellValue("Approveraction");
+		        	dataRow.createCell(7).setCellValue("approverreason");
+		        	dataRow.createCell(8).setCellValue("Approvedate");
+		        	dataRow.getCell(0).setCellStyle(style);
+		        	dataRow.getCell(1).setCellStyle(style);
+		        	dataRow.getCell(2).setCellStyle(style);
+		        	dataRow.getCell(3).setCellStyle(style);
+		        	dataRow.getCell(4).setCellStyle(style);
+		        	dataRow.getCell(5).setCellStyle(style);
+		        	dataRow.getCell(6).setCellStyle(style);
+		        	dataRow.getCell(7).setCellStyle(style);
+		        	dataRow.getCell(8).setCellStyle(style);
+		        	Row nextRow = sheet.createRow(++lastRowCount);
+		        	nextRow.createCell(0).setCellValue(fn);
+		        	nextRow.createCell(1).setCellValue(rn);
+		        	nextRow.createCell(2).setCellValue(ra);       	        
+		        	nextRow.createCell(3).setCellValue(rr);
+		        	nextRow.createCell(4).setCellValue(rd);
+		        	nextRow.createCell(5).setCellValue(an);
+		        	nextRow.createCell(6).setCellValue(aa);
+		        	nextRow.createCell(7).setCellValue(ar);
+		        	nextRow.createCell(8).setCellValue(ad);
+		        	
+				
+				System.out.println("lastRowCount after excel sheet modified.. "  +  lastRowCount);
+				
+				
+				FileOutputStream fileOutputStream = new FileOutputStream(auditFile.getAbsolutePath());
+				workbook1.write(fileOutputStream);
+				fileOutputStream.close();
+				System.out.println("excel sheet updated successfully........");
+				
+				workbook1.close();
+		 }
+         blob.uploadFromFile(auditFile.getAbsolutePath());
+         auditFile.deleteOnExit();
+
 		return "successfull";
 	}
 	
