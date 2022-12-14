@@ -61,14 +61,22 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.DocumentBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+import org.w3c.dom.Node;
+import org.w3c.dom.Element;
+
 @RestController
 @SpringBootApplication
 public class PdfGeneration {
-
-	public static void main(String[] args) throws InvalidKeyException, DocumentException, URISyntaxException, StorageException, IOException  {
-//		PdfGeneration ob= new PdfGeneration();
-//		String s=ob.update("filename","reviewername","revieweraction","reviwerreason","hi","approvername","approveraction","approverreason","hello");
-//		System.out.println(s);
+	public static void main(String[] args) throws InvalidKeyException, DocumentException, URISyntaxException, StorageException, IOException, ParserConfigurationException, SAXException  {
+		PdfGeneration ob= new PdfGeneration();
+		List<String> s=ob.run("data1.xml");
+		System.out.println(s);
 		SpringApplication.run(PdfGeneration.class, args);
 	}
 @GetMapping("/")
@@ -80,7 +88,7 @@ public class PdfGeneration {
 	}
 	@GetMapping("/ContainerCheck")
 	
-	public List<String> method2() throws InvalidKeyException, URISyntaxException, StorageException, UnsupportedEncodingException, MalformedURLException
+	public List<String> fileNames() throws InvalidKeyException, URISyntaxException, StorageException, UnsupportedEncodingException, MalformedURLException
 	{
 		
 		 final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=mqbawblobstorage01;AccountKey=4eEEA1jiy/kEpf9PvN8ikjQeXGFODXXH33G+VPhUiyhqzF7K7RrwFg/0CDEBJpkaYzWArR1bW2XD+AStaWP6zg==;EndpointSuffix=core.windows.net";
@@ -101,13 +109,14 @@ public class PdfGeneration {
 	
 	@GetMapping("/testing")
 	
-	public String run(@RequestParam( name="fileName") String name) throws DocumentException, URISyntaxException, StorageException, InvalidKeyException
+	public List<String> run(@RequestParam( name="fileName") String name) throws DocumentException, URISyntaxException, StorageException, InvalidKeyException, ParserConfigurationException, SAXException
 	{
 			final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=mqbawblobstorage01;AccountKey=4eEEA1jiy/kEpf9PvN8ikjQeXGFODXXH33G+VPhUiyhqzF7K7RrwFg/0CDEBJpkaYzWArR1bW2XD+AStaWP6zg==;EndpointSuffix=core.windows.net";
 		    File xsltFile = null;
 			CloudStorageAccount storageAccount;
 			CloudBlobClient blobClient = null;
 			String blobFileName=null;
+			List<String> list=new ArrayList<String>();
 			try {    
 			
 				storageAccount = CloudStorageAccount.parse(storageConnectionString);
@@ -160,6 +169,7 @@ public class PdfGeneration {
 		    	    doc.close();
 		    	    CloudBlockBlob blob = buffercontainer.getBlockBlobReference(fileName+".pdf");
 		    	    blobFileName=fileName+".pdf";
+		    	    list.add(blobFileName);
 		    	    blob.uploadFromFile(outputFile.getAbsolutePath());
 		    	    BlobProperties props = blob.getProperties();
 		    	    props.setContentType("application/pdf");
@@ -168,6 +178,17 @@ public class PdfGeneration {
 		    	    xsloutput.close();
 		    	    pic1.close();
 		    	    pic2.close();
+		    	    //File inputFile = new File(xmlFile.getAbsolutePath());
+		            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+		            Document document = dBuilder.parse(xmlFile);
+		            document.getDocumentElement().normalize();
+		           // System.out.println("Root element :" + document.getDocumentElement().getNodeName());
+		            NodeList nList = document.getElementsByTagName("ContactDelivery");
+		            Node nNode = nList.item(0);
+		            Element eElement = (Element) nNode;
+		            String siteID= eElement.getElementsByTagName("Company").item(0).getTextContent();
+		            list.add(siteID);
 		    	    xsltFile.deleteOnExit();
 		    	    outputFile.deleteOnExit();
 		    	    xmlFile.deleteOnExit();
@@ -179,7 +200,7 @@ public class PdfGeneration {
 		 catch (FOPException | IOException | TransformerException e) {
 		       e.printStackTrace();
 		} 
-				return blobFileName;
+				return list;
 		   }
 @GetMapping("/AuditTrail")
 	
@@ -295,6 +316,4 @@ if(blob.exists())
 
 		return "successfull";
 	}
-	
-	
 }
