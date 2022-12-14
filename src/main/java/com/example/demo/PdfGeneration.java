@@ -74,9 +74,9 @@ import org.w3c.dom.Element;
 @SpringBootApplication
 public class PdfGeneration {
 	public static void main(String[] args) throws InvalidKeyException, DocumentException, URISyntaxException, StorageException, IOException, ParserConfigurationException, SAXException  {
-		PdfGeneration ob= new PdfGeneration();
-		List<String> s=ob.run("data1.xml");
-		System.out.println(s);
+//		PdfGeneration ob= new PdfGeneration();
+//		List<String> s=ob.run("data1.xml");
+//		System.out.println(s);
 		SpringApplication.run(PdfGeneration.class, args);
 	}
 @GetMapping("/")
