@@ -390,6 +390,6 @@ public String approverName(@RequestParam( name="approverName") String approverNa
 	catch (IOException e) {
 	       e.printStackTrace();
 		}
-	return "successfull";
+	return encodedFileName;
 }
 }
