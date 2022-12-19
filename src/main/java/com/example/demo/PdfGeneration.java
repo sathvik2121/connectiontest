@@ -11,14 +11,18 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.file.Files;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.xml.transform.Result;
 import javax.xml.transform.Transformer;
@@ -47,7 +51,10 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;  
 import java.util.Date;
 
@@ -74,9 +81,9 @@ import org.w3c.dom.Element;
 @SpringBootApplication
 public class PdfGeneration {
 	public static void main(String[] args) throws InvalidKeyException, DocumentException, URISyntaxException, StorageException, IOException, ParserConfigurationException, SAXException  {
-//		PdfGeneration ob= new PdfGeneration();
-//		List<String> s=ob.run("data1.xml");
-//		System.out.println(s);
+		PdfGeneration ob= new PdfGeneration();
+		String s=ob.approverName("hi","data1_2022_12_14.pdf");
+		System.out.println(s);
 		SpringApplication.run(PdfGeneration.class, args);
 	}
 @GetMapping("/")
@@ -316,4 +323,73 @@ if(blob.exists())
 
 		return "successfull";
 	}
+
+@GetMapping("/sign")
+public String approverName(@RequestParam( name="approverName") String approverName,@RequestParam( name="fileName") String fileName) throws InvalidPasswordException, IOException, URISyntaxException, StorageException, InvalidKeyException
+{
+	final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=mqbawblobstorage01;AccountKey=4eEEA1jiy/kEpf9PvN8ikjQeXGFODXXH33G+VPhUiyhqzF7K7RrwFg/0CDEBJpkaYzWArR1bW2XD+AStaWP6zg==;EndpointSuffix=core.windows.net";
+	CloudStorageAccount storageAccount;
+	CloudBlobClient blobClient = null;
+	CloudBlobContainer container=null;
+	String encode = null;
+	String encodedFileName = null;
+	try {    
+		storageAccount = CloudStorageAccount.parse(storageConnectionString);
+		blobClient = storageAccount.createCloudBlobClient();
+		container = blobClient.getContainerReference("pdffiles");
+		CloudBlobContainer buffercontainer=blobClient.getContainerReference("buffercontainer");
+		CloudBlobContainer xmlcontainer=blobClient.getContainerReference("xmlcontainer");
+		CloudBlobContainer encodecontainer=blobClient.getContainerReference("encodedfiledata");
+		File finalFile=File.createTempFile("final", ".pdf");
+        File outputFile=File.createTempFile("output", ".pdf");
+        File encodeFile=File.createTempFile("data",".txt");
+        CloudBlockBlob blob2 = buffercontainer.getBlockBlobReference(fileName);
+        FileOutputStream pdfOutput= new FileOutputStream(outputFile);
+        blob2.download(pdfOutput);
+	    PDDocument document = PDDocument.load(outputFile);
+        PDPage page = document.getPage(4);
+        PDPageContentStream contentStream = new PDPageContentStream(document, page,PDPageContentStream.AppendMode.APPEND,true,true);
+        contentStream.beginText(); 
+        contentStream.setFont(PDType1Font.TIMES_ROMAN, 12);
+        contentStream.newLineAtOffset(73, 355);
+        Date date = new Date();  
+        DateFormat formatter = new SimpleDateFormat("dd MMM yyyy HH:mm:ss z");
+        formatter.setTimeZone(TimeZone.getTimeZone("EST"));
+        String text = "Approved by "+approverName;
+        contentStream.showText(text); 
+        contentStream.newLineAtOffset(0,-13);
+        String text1 =formatter.format(date);
+        contentStream.showText(text1); 
+        contentStream.endText();
+        contentStream.close();
+        document.save(finalFile);
+        document.close();
+        String fileNameWithOutExt = FilenameUtils.removeExtension(fileName);
+        CloudBlockBlob blob = container.getBlockBlobReference(fileNameWithOutExt+".pdf");
+        blob.uploadFromFile(finalFile.getAbsolutePath());
+        byte[] b= Files.readAllBytes(finalFile.toPath());
+        encode=Base64.getEncoder().encodeToString(b);
+        try (PrintWriter out = new PrintWriter(encodeFile)) {
+            out.println(encode);
+        }
+       
+       CloudBlockBlob encodeblob = encodecontainer.getBlockBlobReference(fileNameWithOutExt+".txt");
+       encodedFileName=fileNameWithOutExt+".txt";
+       encodeblob.uploadFromFile(encodeFile.getAbsolutePath());
+       CloudBlockBlob xmlblob = xmlcontainer.getBlockBlobReference(fileNameWithOutExt.substring(0,fileNameWithOutExt.length()-11)+".xml");
+       CloudBlockBlob bufferblob = buffercontainer.getBlockBlobReference(fileName);
+       pdfOutput.close();
+       finalFile.deleteOnExit();
+       outputFile.deleteOnExit();
+       encodeFile.deleteOnExit();
+       blob2.deleteIfExists();
+       xmlblob.deleteIfExists();
+       bufferblob.deleteIfExists();
+      
+   }
+	catch (IOException e) {
+	       e.printStackTrace();
+		}
+	return "successfull";
+}
 }
