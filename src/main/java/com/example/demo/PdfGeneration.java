@@ -41,7 +41,7 @@ import org.apache.fop.apps.MimeConstants;
 import java.io.FileOutputStream;
 
 
-import com.itextpdf.text.DocumentException;
+
 import com.microsoft.azure.storage.*;
 import com.microsoft.azure.storage.blob.*;
 
@@ -80,7 +80,7 @@ import org.w3c.dom.Element;
 @RestController
 @SpringBootApplication
 public class PdfGeneration {
-	public static void main(String[] args) throws InvalidKeyException, DocumentException, URISyntaxException, StorageException, IOException, ParserConfigurationException, SAXException  {
+	public static void main(String[] args) throws InvalidKeyException,  URISyntaxException, StorageException, IOException, ParserConfigurationException, SAXException  {
 //		PdfGeneration ob= new PdfGeneration();
 //		String s=ob.approverName("hi","data1_2022_12_14.pdf");
 //		System.out.println(s);
@@ -116,7 +116,7 @@ public class PdfGeneration {
 	
 	@GetMapping("/testing")
 	
-	public List<String> run(@RequestParam( name="fileName") String name) throws DocumentException, URISyntaxException, StorageException, InvalidKeyException, ParserConfigurationException, SAXException
+	public List<String> run(@RequestParam( name="fileName") String name) throws  URISyntaxException, StorageException, InvalidKeyException, ParserConfigurationException, SAXException
 	{
 			final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=mqbawblobstorage01;AccountKey=4eEEA1jiy/kEpf9PvN8ikjQeXGFODXXH33G+VPhUiyhqzF7K7RrwFg/0CDEBJpkaYzWArR1bW2XD+AStaWP6zg==;EndpointSuffix=core.windows.net";
 		    File xsltFile = null;
@@ -211,7 +211,7 @@ public class PdfGeneration {
 		   }
 @GetMapping("/AuditTrail")
 	
-	public String update(@RequestParam( name="fileName") String fn,@RequestParam( name="reviewerName") String rn,@RequestParam( name="reviewerAction") String ra,@RequestParam( name="reviewerReason") String rr,@RequestParam( name="reviewDateTime") String rd,@RequestParam( name="approverName") String an,@RequestParam( name="approverAction") String aa,@RequestParam( name="approverReason") String ar,@RequestParam( name="approverDateTime") String ad) throws InvalidKeyException, URISyntaxException, StorageException, IOException
+	public String update(@RequestParam( name="fileName") String fn,@RequestParam( name="reviewerID") String rid,@RequestParam( name="reviewerName") String rn,@RequestParam( name="reviewerAction") String ra,@RequestParam( name="reviewerReason") String rr,@RequestParam( name="reviewDateTime") String rd,@RequestParam( name="approverID") String aid,@RequestParam( name="approverName") String an,@RequestParam( name="approverAction") String aa,@RequestParam( name="approverReason") String ar,@RequestParam( name="approverDateTime") String ad) throws InvalidKeyException, URISyntaxException, StorageException, IOException
 	{
 		
 		 final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=mqbawblobstorage01;AccountKey=4eEEA1jiy/kEpf9PvN8ikjQeXGFODXXH33G+VPhUiyhqzF7K7RrwFg/0CDEBJpkaYzWArR1bW2XD+AStaWP6zg==;EndpointSuffix=core.windows.net";
@@ -241,14 +241,16 @@ if(blob.exists())
 			System.out.println(lastRowCount);
 			Row dataRow = sheet.createRow(++lastRowCount);
 	        	dataRow.createCell(0).setCellValue(fn);
-	        	dataRow.createCell(1).setCellValue(rn);
-	        	dataRow.createCell(2).setCellValue(ra);       	        
-	        	dataRow.createCell(3).setCellValue(rr);
-	        	dataRow.createCell(4).setCellValue(rd);
-	        	dataRow.createCell(5).setCellValue(an);
-	        	dataRow.createCell(6).setCellValue(aa);
-	        	dataRow.createCell(7).setCellValue(ar);
-	        	dataRow.createCell(8).setCellValue(ad);
+	        	dataRow.createCell(1).setCellValue(rid);
+	        	dataRow.createCell(2).setCellValue(rn);
+	        	dataRow.createCell(3).setCellValue(ra);       	        
+	        	dataRow.createCell(4).setCellValue(rr);
+	        	dataRow.createCell(5).setCellValue(rd);
+	        	dataRow.createCell(6).setCellValue(aid);
+	        	dataRow.createCell(7).setCellValue(an);
+	        	dataRow.createCell(8).setCellValue(aa);
+	        	dataRow.createCell(9).setCellValue(ar);
+	        	dataRow.createCell(10).setCellValue(ad);
 			FileOutputStream fileOutputStream = new FileOutputStream(auditFile);
 			workbook.write(fileOutputStream);
 			fileOutputStream.close();
@@ -277,16 +279,18 @@ if(blob.exists())
 		            font.setBold(true);
 		            font.setColor(IndexedColors.WHITE.getIndex());
 		            style.setFont(font);
-				System.out.println("lastRowCount.. "  +  lastRowCount);
+				
 				dataRow.createCell(0).setCellValue("filename");
-		        	dataRow.createCell(1).setCellValue("reviewername");
-		        	dataRow.createCell(2).setCellValue("revieweraction");       	        
-		        	dataRow.createCell(3).setCellValue("reviewerreason");
-		        	dataRow.createCell(4).setCellValue("reviewdate");
-		        	dataRow.createCell(5).setCellValue("Approverrname");
-		        	dataRow.createCell(6).setCellValue("Approveraction");
-		        	dataRow.createCell(7).setCellValue("approverreason");
-		        	dataRow.createCell(8).setCellValue("Approvedate");
+				dataRow.createCell(1).setCellValue("reviewerID");
+		        	dataRow.createCell(2).setCellValue("reviewername");
+		        	dataRow.createCell(3).setCellValue("revieweraction");       	        
+		        	dataRow.createCell(4).setCellValue("reviewerreason");
+		        	dataRow.createCell(5).setCellValue("reviewdate");
+		        	dataRow.createCell(6).setCellValue("ApproverID");
+		        	dataRow.createCell(7).setCellValue("Approvername");
+		        	dataRow.createCell(8).setCellValue("Approveraction");
+		        	dataRow.createCell(9).setCellValue("approverreason");
+		        	dataRow.createCell(10).setCellValue("Approvedate");
 		        	dataRow.getCell(0).setCellStyle(style);
 		        	dataRow.getCell(1).setCellStyle(style);
 		        	dataRow.getCell(2).setCellStyle(style);
@@ -296,16 +300,20 @@ if(blob.exists())
 		        	dataRow.getCell(6).setCellStyle(style);
 		        	dataRow.getCell(7).setCellStyle(style);
 		        	dataRow.getCell(8).setCellStyle(style);
+		        	dataRow.getCell(9).setCellStyle(style);
+		        	dataRow.getCell(10).setCellStyle(style);
 		        	Row nextRow = sheet.createRow(++lastRowCount);
 		        	nextRow.createCell(0).setCellValue(fn);
-		        	nextRow.createCell(1).setCellValue(rn);
-		        	nextRow.createCell(2).setCellValue(ra);       	        
-		        	nextRow.createCell(3).setCellValue(rr);
-		        	nextRow.createCell(4).setCellValue(rd);
-		        	nextRow.createCell(5).setCellValue(an);
-		        	nextRow.createCell(6).setCellValue(aa);
-		        	nextRow.createCell(7).setCellValue(ar);
-		        	nextRow.createCell(8).setCellValue(ad);
+		        	nextRow.createCell(1).setCellValue(rid);
+		        	nextRow.createCell(2).setCellValue(rn);
+		        	nextRow.createCell(3).setCellValue(ra);       	        
+		        	nextRow.createCell(4).setCellValue(rr);
+		        	nextRow.createCell(5).setCellValue(rd);
+		        	nextRow.createCell(6).setCellValue(aid);
+		        	nextRow.createCell(7).setCellValue(an);
+		        	nextRow.createCell(8).setCellValue(aa);
+		        	nextRow.createCell(9).setCellValue(ar);
+		        	nextRow.createCell(10).setCellValue(ad);
 		        	
 				
 				System.out.println("lastRowCount after excel sheet modified.. "  +  lastRowCount);
